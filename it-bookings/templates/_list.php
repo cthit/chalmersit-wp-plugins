@@ -12,7 +12,7 @@
 
 	<?php
 		if(!empty($b->booking_group))
-			$group = $wpdb->get_var("SELECT name FROM it_groups_group WHERE group_id = $b->booking_group");
+			$group = $wpdb->get_var("SELECT group_name AS name FROM it_groups_rs WHERE ID = $b->booking_group");
 
 		$user = get_user_by("id", $b->user_id);
 

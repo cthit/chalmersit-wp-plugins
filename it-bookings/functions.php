@@ -88,28 +88,30 @@ function preserve_field($post_var, $fallback = "", $attr = "value"){
 
 /*
 	Custom functions for use with the Groups WP plugin
+
+	Modified by wmax to work with role-scoper instead of Groups
  */
 
 function getGroupsForUser($user_id) {
-	if(!defined('GROUPS_FILE')) {
+	if(!defined('SCOPER_VERSION')) {
 		return null;	
 	}
 
 	global $wpdb;
-	$sql = "SELECT * FROM it_groups_group t1, it_groups_user_group t2 ".
-			"WHERE t2.user_id = ".$user_id." AND t2.group_id = t1.group_id ORDER BY t2.group_id";
+	$sql = "SELECT group_id, group_name FROM it_groups_rs t1, it_user2group_rs t2 ".
+	"WHERE t2.user_id = ".$user_id." AND t2.group_id = t1.ID ORDER BY t2.group_id";
 
 	return $wpdb->get_results($sql);
 }
 
 function getGroupIDsForUser($user_id) {
-	if(!defined('GROUPS_FILE')) {
+	if(!defined('SCOPER_VERSION')) {
 		return null;	
 	}
 	
 	global $wpdb;
 
-	$sql = "SELECT group_id FROM it_groups_user_group WHERE user_id = ".$user_id;
+	$sql = "SELECT group_id FROM it_user2group_rs WHERE user_id = ".$user_id;
 	$res = $wpdb->get_results($sql);
 	$map = array();
 	$cb = function($item) {

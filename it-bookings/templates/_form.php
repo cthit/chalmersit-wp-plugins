@@ -98,24 +98,20 @@
 		<input id="booking-phone" type="text" name="booking_phone" <?php preserve_field($_POST['booking_phone']);?> />
 	</li>
 
-<?php 
-	$user_groups = getGroupsForUser($current_user->ID);
-	# Remove first 'Registered' group:
-	$groups = array_slice($user_groups, 1);
-?>
 
-<?php if($groups) : ?>
+
+<?php $groups = getGroupsForUser($current_user->ID);
+		if($groups) : ?>
 	<li>
 		<label for="user-groups">Boka för</label>
 		<select id="user-groups" name="user_groups">
 		<?php foreach($groups as $g) : ?>
-			<option value="<?php echo $g->group_id;?>"><?php echo $g->name;?></option>
+			<option value="<?php echo $g->group_id;?>"><?php echo $g->group_name;?></option>
 		<?php endforeach;?>
 		</select>
 	</li>
 <?php endif;?>
 </ul>
-
 <p class="party-container">
 	<label title="Såklart du vill">
 		<input 
