@@ -39,7 +39,6 @@ require_once "class.RecurringBooking.php";
 
 
 function it_setup() {
-	error_log("Setup .. ");
 	add_shortcode("bokning", "show_booking");
 
 	Booking::setupDB(IT_BOOKING_TABLE);
@@ -53,7 +52,6 @@ function it_bookings_scripts() {
 }
 
 function it_bookings_activate() {
-	error_log("Activating .. ");
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
 	$sql = "CREATE TABLE IF NOT EXISTS ".IT_BOOKING_TABLE." (
@@ -194,7 +192,6 @@ function send_mail($booking) {
 	}
 
 	$did_send_mail = wp_mail($receivers, $subject, $message);
-	error_log("Did send mail: ".$did_send_mail);
 
 	return $did_send_mail;
 }
