@@ -21,8 +21,8 @@ $IT_BOOKINGS_TEMPLATE_PATH = IT_BOOKING_PATH."/templates/_bookings.php";
 # Mail configuration
 
 $mail_variables = array(
-	"receivers" => array("johan.jvb@gmail.com"),		# String array with mail addresses
-	"party_receivers" => array("johan@johanbrook.com")
+	"receivers" => array("prit@chalmers.it"),		# String array with mail addresses
+	"party_receivers" => array("prit@chalmers.it")
 );
 
 add_action("init", "it_setup");
@@ -175,8 +175,7 @@ function new_booking() {
 
 
 function send_mail($booking) {
-	#$receivers = $mail_variables['receivers'];
-	$receivers = array("johan.jvb@gmail.com");
+	$receivers = $mail_variables['receivers'];
 	$subject = sprintf('Bokning av %1$s: "%2$s"', $booking->getLocation(), $booking->getTitle());
 
 	$message = "Titel:\t".$booking->getTitle()."\n";
@@ -190,8 +189,11 @@ function send_mail($booking) {
 		$message .= "Festanmält:\tJa\n";
 		$message .= "Alkoholtillstånd:\t" . (($booking->hasWarrant()) ? "Ja" : "Nej") . "\n";
 		$message .= "Festansvarig:\t" . ($booking->getResponsibleName()) ."\n";
-		$message .= "Festansvarig, tel:\t" . (($booking->getResponsiblePhone())) . "\n";
+		$message .= "Festansvarig, tel:\t" . (($booking->getResponsiblePhone())) . "\n\n";
 	}
+
+	$message .= "Hugg Hugg Puss Puss\n";
+	$message .= $booking->user." Genom ".$booking->group;
 
 	$did_send_mail = wp_mail($receivers, $subject, $message);
 	error_log("Did send mail: ".$did_send_mail);
