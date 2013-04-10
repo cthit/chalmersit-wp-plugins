@@ -65,12 +65,16 @@ function parseDateFromString(input) {
 
 
 function formatDate(date) {
-	var month = date.getMonth() + 1;
+	var month = date.getMonth() + 1,
+		day = date.getDate();
 	if(month < 10) {
 		month = "0"+month;
 	}
+	if(day < 10) {
+		day = "0"+day;
+	}
 
-	return date.getFullYear()+"-"+ month +"-"+date.getDate();
+	return date.getFullYear()+"-"+ month +"-"+day;
 }
 
 function formatDateFromString(date) {
@@ -122,8 +126,8 @@ $(function() {
 	 */
 	$(".booking-dates-container input").on("blur", function(evt) {
 		var date = $(this).val();
-		if(!date.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
-			$(this).val(formatDateFromString(date));
+		if(date.match(/^\d{4}-\d{2}-\d{2}$/) === null) {
+			$(this).val(formatDate(parseDateFromString(formatDateFromString(date))));
 		}
 	});
 
