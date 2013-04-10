@@ -21,8 +21,8 @@ $IT_BOOKINGS_TEMPLATE_PATH = IT_BOOKING_PATH."/templates/_bookings.php";
 # Mail configuration
 
 $mail_variables = array(
-	"receivers" => array("prit@chalmers.it"),		# String array with mail addresses
-	"party_receivers" => array("prit@chalmers.it")
+	"receivers" => array(),			# String array with mail addresses
+	"party_receivers" => array()
 );
 
 add_action("init", "it_setup");
@@ -39,7 +39,6 @@ require_once "class.RecurringBooking.php";
 
 
 function it_setup() {
-	error_log("Setup .. ");
 	add_shortcode("bokning", "show_booking");
 
 	Booking::setupDB(IT_BOOKING_TABLE);
@@ -53,7 +52,6 @@ function it_bookings_scripts() {
 }
 
 function it_bookings_activate() {
-	error_log("Activating .. ");
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
 	$sql = "CREATE TABLE IF NOT EXISTS ".IT_BOOKING_TABLE." (
@@ -162,7 +160,9 @@ function new_booking() {
 		if($booking->save()) {
 			$notice = "Du har bokat ".$location;
 
-			send_mail($booking);
+			if(send_mail($booking)) {
+				$notice .= ". Ett mail har skickats till ansvarig";
+			}
 
 			add_action("it_bookings_feedback", "it_bookings_notice");
 		}
@@ -175,7 +175,10 @@ function new_booking() {
 
 
 function send_mail($booking) {
+	global $mail_variables;
+
 	$receivers = $mail_variables['receivers'];
+
 	$subject = sprintf('Bokning av %1$s: "%2$s"', $booking->getLocation(), $booking->getTitle());
 
 	$message = "Titel:\t".$booking->getTitle()."\n";
@@ -196,7 +199,6 @@ function send_mail($booking) {
 	$message .= $booking->user." Genom ".$booking->group;
 
 	$did_send_mail = wp_mail($receivers, $subject, $message);
-	error_log("Did send mail: ".$did_send_mail);
 
 	return $did_send_mail;
 }
@@ -229,6 +231,15 @@ function it_bookings_notice() {
 	<?php
 }
 
+function set_booking_emails($emails) {
+	global $mail_variables;
+	$mail_variables['receivers'] = $emails;
+}
+
+function set_party_booking_emails($emails) {
+	global $mail_variables;
+	$mail_variables['party_receivers'] = $emails;
+}
 
 function show_booking($attr, $content = null) {
 	global $IT_BOOKING_FORM_PATH;
