@@ -175,7 +175,7 @@ function new_booking() {
 
 
 function send_mail($booking) {
-	global $mail_variables;
+	global $mail_variables, $wpdb;
 
 	$receivers = $mail_variables['receivers'];
 
@@ -196,7 +196,16 @@ function send_mail($booking) {
 	}
 
 	$message .= "Hugg Hugg Puss Puss\n";
-	$message .= $booking->user." Genom ".$booking->group;
+	
+	$user = get_user_by("id", $booking->getUserID());
+	$message .= $user->display_name;
+	$b_group = $booking->getGroup();
+
+	if(!empty($b_group)){
+
+		$group = $wpdb->get_var("SELECT group_name AS name FROM it_groups_rs WHERE ID = ".$b_group);
+		$message .=" Genom ".$group;
+	}
 
 	$did_send_mail = wp_mail($receivers, $subject, $message);
 
