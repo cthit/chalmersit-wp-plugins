@@ -124,6 +124,10 @@ class Booking {
 		return $this->booker_phone;
 	}
 
+	public function getGroup() {
+		return $this->booker_group;
+	}
+
 	public function getDescription() {
 		return $this->description;
 	}
