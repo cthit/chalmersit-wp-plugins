@@ -35,7 +35,7 @@ class Booking {
 		$this->start_timestamp = $this->stringToMysqlDatetime($params["start_date"]);
 		$this->end_timestamp = $this->stringToMysqlDatetime($params["end_date"]);
 		$this->user = $params["user_id"];
-		$this->booker_phone = $params["phone"];
+		$this->booker_phone = preg_replace('/[^0-9]/s', '', $params["phone"]);
 		$this->description = $params['description'];
 		$this->is_repeating = $params['is_repeating'];
 		$this->booker_group = $params['group'];
