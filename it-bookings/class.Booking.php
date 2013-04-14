@@ -93,6 +93,8 @@ class Booking {
 		self::$super_group = $group_id;
 	}
 
+	# Use -1 to signify that no group constraints is set on the room
+	# e.g. everybody may book it.
 	public static function setConstraintsForRooms($constraints) {
 		self::$room_constraints = $constraints;
 	}
@@ -211,13 +213,19 @@ class Booking {
 				$this->lunchroom_booking_start-$this->lunchroom_booking_end";
 		}
 
+		# Check group constraints on rooms
+
 		if( !empty(self::$room_constraints)) {
 
 			$groups = self::$room_constraints[$this->location];
-			$res = array_intersect($this->user_groups, $groups);
 
-			if(empty($res)) {
-				$this->errors['privileges'] = "Du har inte behörighet att boka $this->location";
+			# -1 signifies no restriction on the room
+			if($groups != -1) {
+				$res = array_intersect($this->user_groups, $groups);
+
+				if(empty($res)) {
+					$this->errors['privileges'] = "Du har inte behörighet att boka $this->location";
+				}
 			}
 		}
 
