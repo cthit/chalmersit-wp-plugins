@@ -35,7 +35,7 @@ class Booking {
 		$this->start_timestamp = $this->stringToMysqlDatetime($params["start_date"]);
 		$this->end_timestamp = $this->stringToMysqlDatetime($params["end_date"]);
 		$this->user = $params["user_id"];
-		$this->booker_phone = $params["phone"];
+		$this->booker_phone = preg_replace('/[^0-9]/s', '', $params["phone"]);
 		$this->description = $params['description'];
 		$this->is_repeating = $params['is_repeating'];
 		$this->booker_group = $params['group'];
@@ -124,6 +124,10 @@ class Booking {
 		return $this->booker_phone;
 	}
 
+	public function getGroup() {
+		return $this->booker_group;
+	}
+
 	public function getDescription() {
 		return $this->description;
 	}
@@ -172,6 +176,13 @@ class Booking {
 
 		if(preg_match("/[^0-9]/", $this->booker_phone)) {
 			$this->errors['incorrect_phone'] = "Telefonnumret du angav är inte korrekt";
+		}
+
+		# Start or end time can't be before current time 
+
+		if(($current = time()) && strtotime($this->start_timestamp) < $current || 
+				strtotime($this->end_timestamp) < $current) {
+			$this->errors['invalid_date'] = "Du kan inte boka i dåtid utan tidsmaskin";
 		}
 
 		# Start time can't be after end time
