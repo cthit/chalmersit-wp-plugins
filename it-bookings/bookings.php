@@ -198,9 +198,7 @@ function send_mail($booking) {
 	$message .= "Hugg Hugg Puss Puss\n";
 	
 	$user = get_user_by("id", $booking->getUserID());
-
 	$message .= $user->display_name;
-
 	$b_group = $booking->getGroup();
 
 	if(!empty($b_group)){
@@ -208,7 +206,7 @@ function send_mail($booking) {
 		$group = $wpdb->get_var("SELECT group_name AS name FROM it_groups_rs WHERE ID = ".$b_group);
 		$message .=" Genom ".$group;
 	}
-	
+
 	$did_send_mail = wp_mail($receivers, $subject, $message);
 
 	return $did_send_mail;
