@@ -174,6 +174,13 @@ class Booking {
 			$this->errors['incorrect_phone'] = "Telefonnumret du angav är inte korrekt";
 		}
 
+		# Start or end time can't be before current time 
+
+		if(($current = time()) && strtotime($this->start_timestamp) < $current || 
+				strtotime($this->end_timestamp) < $current) {
+			$this->errors['invalid_date'] = "Du kan inte boka i dåtid utan tidsmaskin";
+		}
+
 		# Start time can't be after end time
 		if(strtotime($this->start_timestamp) > strtotime($this->end_timestamp)) {
 			$this->errors["dates_overlapping"] = "Datumen överlappar varandra";
