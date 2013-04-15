@@ -219,6 +219,10 @@ class Booking {
 
 			$groups = self::$room_constraints[$this->location];
 
+			if($this->location == "Hubben" && $this->booker_group == "") {
+				$this->errors['private_hubben'] = "Du kan inte boka Hubben som privatperson";
+			}
+
 			# -1 signifies no restriction on the room
 			if($groups != -1) {
 				$res = array_intersect($this->user_groups, $groups);
