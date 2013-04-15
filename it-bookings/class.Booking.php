@@ -38,7 +38,7 @@ class Booking {
 		$this->booker_phone = preg_replace('/[^0-9]/s', '', $params["phone"]);
 		$this->description = $params['description'];
 		$this->is_repeating = $params['is_repeating'];
-		$this->booker_group = $params['group'];
+		$this->booker_group = ($params['group'] != -1) ? $params['group'] : "";
 
 		$this->errors = array();
 

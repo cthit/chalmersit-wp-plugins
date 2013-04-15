@@ -103,8 +103,9 @@
 <?php $groups = getGroupsForUser($current_user->ID);
 		if($groups) : ?>
 	<li>
-		<label for="user-groups">Boka för</label>
+		<label for="user-groups">Boka som</label>
 		<select id="user-groups" name="user_groups">
+			<option value="-1">Privatperson</option>
 		<?php foreach($groups as $g) : ?>
 			<option value="<?php echo $g->group_id;?>"><?php echo $g->group_name;?></option>
 		<?php endforeach;?>
