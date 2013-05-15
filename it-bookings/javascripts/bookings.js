@@ -113,11 +113,11 @@ $(function() {
 
 	// Toggle repeat checkbox when room is 'Grupprummet'
 	$(".location-container input").on("change", function(evt) {
-		$(".booking-repeat-container").toggle();
+		// $(".booking-repeat-container").toggle();
 
 		if($(this).val() !== "Grupprummet") {
 			$("#booking-repeat-check").attr("checked", false);
-			$(".booking-repeat-info").toggle();	
+		//	$(".booking-repeat-info").toggle();	
 		}
 	});
 
