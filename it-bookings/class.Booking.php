@@ -207,10 +207,11 @@ class Booking {
 		if($this->location == "Grupprummet" && 
 			!$this->isBookedOnWeekend() &&
 			(date('G', strtotime($this->start_timestamp)) < $this->lunchroom_booking_start || 
-			date('G', strtotime($this->end_timestamp)) > $this->lunchroom_booking_end )
+			date('G', strtotime($this->end_timestamp)) > $this->lunchroom_booking_end ) && 
+			date('G', strtotime($this->start_timestamp)) < $this->booking_time_weekday
 		) {
-			$this->errors['lunchroom_overlap'] = "Du kan inte boka ".$this->location." utanför tiderna 
-				$this->lunchroom_booking_start-$this->lunchroom_booking_end";
+			$this->errors['lunchroom_overlap'] = "Du kan inte boka ".$this->location." utanför tiderna ".
+				$this->lunchroom_booking_start."-".$this->lunchroom_booking_end. ", ".$this->booking_time_weekday."-";
 		}
 
 		# Check group constraints on rooms
