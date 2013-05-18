@@ -115,7 +115,7 @@
 </ul>
 <p class="party-container">
 	<label title="Såklart du vill">
-		<input 
+		<input
 			type="checkbox" 
 			name="booking_is_party" 
 			id="is-party-booking" 
