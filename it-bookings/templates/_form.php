@@ -115,13 +115,13 @@
 </ul>
 <p class="party-container">
 	<label title="Såklart du vill">
-		<input 
+		<input disabled
 			type="checkbox" 
 			name="booking_is_party" 
 			id="is-party-booking" 
 			value="yes" <?php checked($_POST['booking_is_party'], 1);?> />
 
-		Jag vill även festanmäla
+		Jag vill även festanmäla <em>(tillfälligt ur funktion)</em>
 	</label>
 </p>
 
