@@ -160,8 +160,12 @@ function new_booking() {
 		if($booking->save()) {
 			$notice = "Du har bokat ".$location;
 
-			if(send_mail($booking)) {
-				$notice .= ". Ett mail har skickats till ansvarig";
+			if(send_mail($booking, false)) {
+				$notice .= ". Ett mail har skickats till lokalansvarig";
+			}
+
+			if($is_party_booking && send_mail($booking, true)) {
+				$notice .= ". En festanmälan är skickad";
 			}
 
 			add_action("it_bookings_feedback", "it_bookings_notice");
@@ -173,13 +177,15 @@ function new_booking() {
 	}
 }
 
-
-function send_mail($booking) {
+/* Handles both regular and party emails */
+function send_mail($booking, $is_party_booking) {
 	global $mail_variables, $wpdb;
 
-	$receivers = $mail_variables['receivers'];
+	$receivers = "";
+	error_log($receivers);
 
-	$subject = sprintf('Bokning av %1$s: "%2$s"', $booking->getLocation(), $booking->getTitle());
+	$subject = sprintf(' av %1$s: "%2$s"', $booking->getLocation(), $booking->getTitle());
+
 
 	$message = "Titel:\t".$booking->getTitle()."\n";
 	$message .= "Lokal:\t".$booking->getLocation()."\n";
@@ -189,13 +195,25 @@ function send_mail($booking) {
 	$message .= "Beskrivning:\n". $booking->getDescription() ."\n\n";
 
 	if($booking instanceof PartyBooking) {
-		$message .= "Festanmält:\tJa\n";
+		if(!$is_party_booking){
+			$message .= "Festanmält:\tJa\n";
+		}
 		$message .= "Alkoholtillstånd:\t" . (($booking->hasWarrant()) ? "Ja" : "Nej") . "\n";
 		$message .= "Festansvarig:\t" . ($booking->getResponsibleName()) ."\n";
 		$message .= "Festansvarig, tel:\t" . (($booking->getResponsiblePhone())) . "\n\n";
 	}
+	
+	/* the famous IS-IT-A-PARTY?!-switch */
 
-	$message .= "Hugg Hugg Puss Puss\n";
+	if($is_party_booking){
+		$subject = "Festanmälan".$subject;
+		$message .= "Hälsningar\n";
+		$receivers = $mail_variables['party_receivers'];
+	} else {
+		$subject = "Bokning".$subject;
+		$message .= "Hugg Hugg Puss Puss\n";
+		$receivers = $mail_variables['receivers'];
+	}
 	
 	$user = get_user_by("id", $booking->getUserID());
 	$message .= $user->display_name;
@@ -211,11 +229,6 @@ function send_mail($booking) {
 
 	return $did_send_mail;
 }
-
-function send_party_email($booking) {
-
-}
-
 
 function it_bookings_errors() {
 	global $errors;?>
