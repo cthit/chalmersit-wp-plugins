@@ -13,6 +13,7 @@ define("IT_NEWSMAIL_TABLE", $wpdb->prefix. "newsmail");
 register_activation_hook(__FILE__, 'it_newsmail_activate');
 register_deactivation_hook(__FILE__,'it_newsmail_deactivate');
 add_action("init", "it_newsmail");
+add_action("publish_post", "itnm_doMail");
 
 require_once "class.ITNewsMail_Widget.php";
 
@@ -62,7 +63,25 @@ function it_newsmail_deactivate(){
 }
 
 function itnm_doMail($post_id){
-	// Do the actual mailing here
-}
+	$post = get_post($post_id);
+	$thecontent = apply_filters('the_content', $post->post_content);
+	$cat = get_the_category($post_id);
+	$author = get_user_by('id',$post->post_author)->display_name;
+	$recipients = get_emails_for_category($cat->cat_ID);
 
+	$subject = "Chalmers.it: ".$post->post_title;
+
+	$message = "<a href=\"".get_permalink($post_id)."\" >";
+	$message .= "<h2>".$post->post_title."</h2></a>";
+	$message .= $thecontent;
+	$message .= "<p><em>".$post->post_date." by ".$author."</em></p>";
+
+	$headers['from'] = 'From: Chalmers.it <noreply@chalmers.it>';
+		$headers['mime']     = 'MIME-Version: 1.0';
+		$headers['type']     = 'Content-Type: text/html; charset="utf8"';
+	$header = implode("\n", $headers);
+
+	wp_mail($recipients, $subject, $message, $header);
+
+}
 ?>
