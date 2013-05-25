@@ -81,9 +81,8 @@ function itnm_doMail($post_id){
 	$headers['type']     = 'Content-Type: text/html; charset="utf8"';
 	
 	$recipients = "";
-	for ($i=0; $i<count($allrecipients);i++) { 
-	 	# code...
-		$recipients .= $allrecipients[$i];
+	for ($i=0; $i<count($allrecipients);$i++) { 
+		$recipients .= $allrecipients[$i].", ";
 
 		if($i % 90 == 89){
 			$headers['bcc'] = 'BCC: '.$recipients;	
