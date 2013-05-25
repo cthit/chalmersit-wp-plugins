@@ -67,7 +67,7 @@ function itnm_doMail($post_id){
 	$thecontent = apply_filters('the_content', $post->post_content);
 	$cat = get_the_category($post_id);
 	$author = get_user_by('id', $post->post_author)->display_name;
-	$recipients = get_emails_for_category($cat->cat_ID);
+	$allrecipients = get_emails_for_category($cat->cat_ID);
 
 	$subject = "Chalmers.it: ".$post->post_title;
 
@@ -77,12 +77,23 @@ function itnm_doMail($post_id){
 	$message .= "<p><em>".$post->post_date." by ".$author."</em></p>";
 
 	$headers['from'] = 'From: Chalmers.it <noreply@chalmers.it>';
-	$headers['bcc'] = 'BCC: '.$recipients;
 	$headers['mime']     = 'MIME-Version: 1.0';
 	$headers['type']     = 'Content-Type: text/html; charset="utf8"';
+	
+	$recipients = "";
+	for ($i=0; $i<count($allrecipients);$i++) { 
+		$recipients .= $allrecipients[$i].", ";
+
+		if($i % 90 == 89){
+			$headers['bcc'] = 'BCC: '.$recipients;	
+			$header = implode("\n", $headers);
+			wp_mail("", $subject, $message, $header);
+			$recipients = "";		
+		}
+	}
+
+	$headers['bcc'] = 'BCC: '.$recipients;	
 	$header = implode("\n", $headers);
-
 	wp_mail("", $subject, $message, $header);
-
 }
 ?>
