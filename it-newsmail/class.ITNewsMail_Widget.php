@@ -49,15 +49,8 @@ class ITNewsMail_Widget extends WP_Widget {
 		global $current_user;
 		get_currentuserinfo();
 
+		$cats = get_choices_for_user($current_user->ID);
 
-
-		$cats = get_categories_for_user($current_user->ID);
-		$sub_all_news = false;
-
-		foreach ($cats as $cat) {
-			if($cat->cat_id == "-1")
-				$sub_all_news = true;
-		}
 		// Get categories, find out if user is subscribing, set values in the form
 		ob_start();
 
@@ -71,7 +64,12 @@ class ITNewsMail_Widget extends WP_Widget {
 		<form method="post" id="newsmail-widget-form" name="newsmail" action="">
 			<input type="hidden" name="action" value="it_newsmail" />
 			<div class="widget scroll">
-				<label for="itnm-1"><input type="checkbox" id="itnm-1" name="itnm-1" <?if($sub_all_news) echo "checked"; ?>/> Alla nyheter</label>
+				<?php 
+				foreach ($cats as $key => $value) { ?>
+					<label for="itnm<?php echo $key; ?>">
+					<input type="checkbox" id="itnm<?php echo $key; ?>" name="itnm<?php echo $key; ?>"
+					<?php if($value['choice']) echo "checked"; ?>/> <?php echo $value['name']; ?></label>
+				<?php } ?>
 			</div>
 			<input type="submit" value="Spara" />
 		</form>
