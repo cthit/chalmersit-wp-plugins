@@ -12,15 +12,16 @@ define("IT_NEWSMAIL_TABLE", $wpdb->prefix. "newsmail");
 
 register_activation_hook(__FILE__, 'it_newsmail_activate');
 register_deactivation_hook(__FILE__,'it_newsmail_deactivate');
-add_action("init", "it_newsmail");
+add_action("init", "itnm_register_subscription");
 add_action("publish_post", "itnm_doMail");
 
 require_once "class.ITNewsMail_Widget.php";
+require_once "functions.php";
 
 ITNewsMail_Widget::init();
 
 /* Register categories for user here! */
-function it_newsmail(){
+function itnm_register_subscription(){
 	global $wpdb;
 	if($_SERVER['REQUEST_METHOD'] == "POST" &&
 					!empty($_POST['action']) &&
@@ -29,16 +30,23 @@ function it_newsmail(){
 		get_currentuserinfo();
 		$user_id = $current_user->ID;
 
-		$wpdb->query($wpdb->prepare("DELETE FROM ".IT_NEWSMAIL_TABLE." WHERE user_id = %d", $user_id));
-		
-		if($_POST['itnm-1']){
-			$wpdb->insert(IT_NEWSMAIL_TABLE, array(
-				'user_id' => $user_id,
-				'cat_id' => -1));
+		$old_cats = get_choices_for_user($user_id);
+		$new_cats = extract_choices($_POST);
+
+		foreach ($old_cats as $key => $value) {
+			if($old_cats[$key]['choice'] && !$new_cats[$key]['choice']){
+				// Something removed, perform delete!
+				$wpdb->query($wpdb->prepare("DELETE FROM ".IT_NEWSMAIL_TABLE." WHERE user_id = %d AND cat_id = %d", $user_id, $key));
+			}
+			if(!$old_cats[$key]['choice'] && $new_cats[$key]['choice']){
+				// Something added, perform insert!
+				$wpdb->insert(IT_NEWSMAIL_TABLE, array(
+					'user_id' => $user_id,
+					'cat_id' => $key));
+			}
+			// Any other case - they are the same - do nothing
 		}
-
 	}
-
 }
 
 function it_newsmail_activate(){
@@ -81,6 +89,11 @@ function itnm_doMail($post_id){
 	$headers['type']     = 'Content-Type: text/html; charset="utf8"';
 	
 	$recipients = "";
+	
+	/* The following block is for dispatching
+	 * one mail per 89 users, as we have a limit
+	 * on recipients per mail
+	 */
 	for ($i=0; $i<count($allrecipients);$i++) { 
 		$recipients .= $allrecipients[$i].", ";
 
