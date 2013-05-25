@@ -15,9 +15,9 @@ function get_emails_for_category($cat_id){
 	it_users.ID = it_newsmail.user_id AND (cat_id = -1) GROUP BY user_email;";
 	$res = $wpdb->get_results($sql);
 
-	$emails = "";
+	$emails = array();
 	foreach ($res as $row) {
-		$emails .= $row->user_email.", ";
+		$emails []= $row->user_email;
 	}
 
 	return $emails;
