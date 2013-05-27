@@ -4,16 +4,22 @@
 	Plugin URI: https://chalmers.it
 	Description: Newsposts are mailed to users automatically. Users manage subscriptions via a widget 
 	Author: Max Witt
-	License: MIT
+	Version: 2.0
+	License: cc-by-sa
 */
 
 global $wpdb;
-define("IT_NEWSMAIL_TABLE", $wpdb->prefix. "newsmail");
+define("SUBSCRIBE_TABLE", $wpdb->prefix."newsmail");
+define("QUEUE_TABLE", $wpdb->prefix."newsmail_queue");
+define("DELAY_TIME", 10);
 
 register_activation_hook(__FILE__, 'it_newsmail_activate');
 register_deactivation_hook(__FILE__,'it_newsmail_deactivate');
+add_filter('cron_schedules', 'cronfilter_fifteen_min');
+add_action('itnm_cronhook', 'itnm_cron');
 add_action("init", "itnm_register_subscription");
-add_action("publish_post", "itnm_doMail");
+add_action("publish_post", "itnm_queuePost");
+
 
 require_once "class.ITNewsMail_Widget.php";
 require_once "functions.php";
@@ -36,11 +42,11 @@ function itnm_register_subscription(){
 		foreach ($old_cats as $key => $value) {
 			if($old_cats[$key]['choice'] && !$new_cats[$key]['choice']){
 				// Something removed, perform delete!
-				$wpdb->query($wpdb->prepare("DELETE FROM ".IT_NEWSMAIL_TABLE." WHERE user_id = %d AND cat_id = %d", $user_id, $key));
+				$wpdb->query($wpdb->prepare("DELETE FROM ".SUBSCRIBE_TABLE." WHERE user_id = %d AND cat_id = %d", $user_id, $key));
 			}
 			if(!$old_cats[$key]['choice'] && $new_cats[$key]['choice']){
 				// Something added, perform insert!
-				$wpdb->insert(IT_NEWSMAIL_TABLE, array(
+				$wpdb->insert(SUBSCRIBE_TABLE, array(
 					'user_id' => $user_id,
 					'cat_id' => $key));
 			}
@@ -52,30 +58,83 @@ function itnm_register_subscription(){
 function it_newsmail_activate(){
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-	$sql = "CREATE TABLE IF NOT EXISTS ".IT_NEWSMAIL_TABLE." (
-		id mediumint(9) NOT NULL AUTO_INCREMENT,
+	wp_schedule_event(time(), 'fifteen_min', itnm_cronhook);
+
+	/* Subscribe table */
+	$sql = "CREATE TABLE IF NOT EXISTS ".SUBSCRIBE_TABLE." (
 		user_id bigint(20) unsigned NOT NULL,
 		cat_id bigint(20) signed NOT NULL,
 
-		PRIMARY KEY (id)
+		PRIMARY KEY (user_id, cat_id)
 		);";
 	
 	dbDelta($sql);
+
+	/* Queue table */
+	$sql = "CREATE TABLE IF NOT EXISTS ".QUEUE_TABLE." (
+		post_id bigint(20) unsigned NOT NULL,
+		minutestamp bigint(20) unsigned NOT NULL,
+
+		PRIMARY KEY (post_id)
+		);";
+
+	dbDelta($sql);
+}
+
+function cronfilter_fifteen_min($schedules){
+	// A 10 minute scheduler
+	$schedules['fifteen_min'] = array(
+			'interval' => 900,
+			'display' => __('Every 10 minutes')
+			);
+	return $schedules;
 }
 
 function it_newsmail_deactivate(){
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-	$sql = "DROP TABLE ".IT_NEWSMAIL_TABLE.";";
+	wp_clear_scheduled_hook('itnm_cronhook');
+
+	$sql = "DROP TABLE ".SUBSCRIBE_TABLE.";";
 	dbDelta($sql);
+}
+
+function itnm_queuePost($post_id) {
+	global $wpdb;
+	$minutes = intval(current_time('timestamp')/60)+DELAY_TIME;
+
+	// Smart insert which updates if the post already exists
+	$sql = $wpdb->prepare("INSERT INTO ".QUEUE_TABLE." (post_id, minutestamp) 
+		VALUES (%d, %d) ON DUPLICATE KEY UPDATE 
+		minutestamp = %d", $post_id, $minutes, $minutes);
+	$wpdb->query($sql);
+}
+
+function itnm_cron() {
+	global $wpdb;
+	$time = intval(current_time('timestamp')/60);
+
+	$sql = $wpdb->prepare("SELECT post_id FROM ".QUEUE_TABLE." WHERE minutestamp <= %d", $time);
+	$posts = $wpdb->get_results($sql);
+
+	foreach ($posts as $p) {
+		if(itnm_doMail($p->post_id)){
+			$sql = $wpdb->prepare("DELETE FROM ".QUEUE_TABLE." WHERE 
+				post_id = %d", $p->post_id);
+		} else {
+			$time += DELAY_TIME;
+			$sql = $wpdb->prepare("UPDATE ".QUEUE_TABLE." SET minutestamp = %d WHERE post_id = %d", $time, $p->post_id);
+		}
+		$wpdb->query($sql);
+	}
 }
 
 function itnm_doMail($post_id){
 	$post = get_post($post_id);
 	$thecontent = apply_filters('the_content', $post->post_content);
-	$cat = get_the_category($post_id);
+	$cats = wp_get_post_categories($post_id);
 	$author = get_user_by('id', $post->post_author)->display_name;
-	$allrecipients = get_emails_for_category($cat->cat_ID);
+	$allrecipients = get_emails_for_categories($cats);
 
 	$subject = "Chalmers.it: ".$post->post_title;
 
@@ -91,7 +150,7 @@ function itnm_doMail($post_id){
 	$recipients = "";
 	
 	/* The following block is for dispatching
-	 * one mail per 89 users, as we have a limit
+	 * one mail per 90 users, as we have a limit
 	 * on recipients per mail
 	 */
 	for ($i=0; $i<count($allrecipients);$i++) { 
@@ -100,13 +159,17 @@ function itnm_doMail($post_id){
 		if($i % 90 == 89){
 			$headers['bcc'] = 'BCC: '.$recipients;	
 			$header = implode("\n", $headers);
-			wp_mail("", $subject, $message, $header);
+			if(!(wp_mail("", $subject, $message, $header))){
+				return false;
+			}
 			$recipients = "";		
 		}
 	}
-
-	$headers['bcc'] = 'BCC: '.$recipients;	
-	$header = implode("\n", $headers);
-	wp_mail("", $subject, $message, $header);
+	if($recipients !== ""){
+		$headers['bcc'] = 'BCC: '.$recipients;	
+		$header = implode("\n", $headers);
+		return wp_mail("", $subject, $message, $header);
+	}
+	return true;
 }
 ?>
