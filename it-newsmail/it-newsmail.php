@@ -11,7 +11,7 @@
 global $wpdb;
 define("SUBSCRIBE_TABLE", $wpdb->prefix."newsmail");
 define("QUEUE_TABLE", $wpdb->prefix."newsmail_queue");
-define("DELAY_TIME", 10);
+define("DELAY_TIME", 60);
 
 register_activation_hook(__FILE__, 'it_newsmail_activate');
 register_deactivation_hook(__FILE__,'it_newsmail_deactivate');
