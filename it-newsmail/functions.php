@@ -6,11 +6,17 @@
  * only the categories that applies
  * to the post.
  */
-function get_emails_for_category($cat_id){
+function get_emails_for_categories($cats){
 	global $wpdb;
 	
+	$catString = "";
+
+	foreach ($cats as $id) {
+		$catString .= " OR cat_id = ".$id;
+	}
+
 	$sql = "SELECT user_email FROM it_newsmail, it_users WHERE 
-	it_users.ID = it_newsmail.user_id AND (cat_id = -1) GROUP BY user_email;";
+	it_users.ID = it_newsmail.user_id AND (cat_id = -1".$catString.") GROUP BY user_email;";
 	$res = $wpdb->get_results($sql);
 
 	$emails = array();
@@ -21,8 +27,10 @@ function get_emails_for_category($cat_id){
 	return $emails;
 }
 
+
 function get_all_categories() {
-	$catObjs = get_categories();
+	$catObjs = get_categories(array(
+		"hide_empty" => 0));
 
 	$cats = array();
 	$cats[-1] = array(
@@ -38,10 +46,7 @@ function get_all_categories() {
 	return $cats;
 }
 
-function extract_cats_from_post($post_id){
-	// TODO: Find out how cats are extracted, and in what form
 
-}
 
 /* Takes a post object from the request
  * processor and forms an array which
@@ -60,6 +65,7 @@ function extract_choices($POST){
 
 /* As above, but for choices already in DB
  */
+
 function get_choices_for_user($user_id){
 	global $wpdb;
 	$sql = "SELECT cat_id FROM ".IT_NEWSMAIL_TABLE." WHERE user_id = ".$user_id;
@@ -72,5 +78,6 @@ function get_choices_for_user($user_id){
 
 	return $cats;
 }
-?>
 
+
+?>
