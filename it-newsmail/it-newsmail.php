@@ -5,7 +5,7 @@
 	Description: Newsposts are mailed to users automatically. Users manage subscriptions via a widget 
 	Author: Max Witt
 	Version: 2.0
-	License: MIT
+	License: cc-by-sa
 */
 
 global $wpdb;
@@ -15,8 +15,11 @@ define("DELAY_TIME", 10);
 
 register_activation_hook(__FILE__, 'it_newsmail_activate');
 register_deactivation_hook(__FILE__,'it_newsmail_deactivate');
+add_filter('cron_schedules', 'cronfilter_fifteen_min');
+add_action('itnm_cronhook', 'itnm_cron');
 add_action("init", "itnm_register_subscription");
 add_action("publish_post", "itnm_queuePost");
+
 
 require_once "class.ITNewsMail_Widget.php";
 require_once "functions.php";
@@ -55,6 +58,8 @@ function itnm_register_subscription(){
 function it_newsmail_activate(){
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
+	wp_schedule_event(time(), 'fifteen_min', itnm_cronhook);
+
 	/* Subscribe table */
 	$sql = "CREATE TABLE IF NOT EXISTS ".SUBSCRIBE_TABLE." (
 		user_id bigint(20) unsigned NOT NULL,
@@ -76,8 +81,19 @@ function it_newsmail_activate(){
 	dbDelta($sql);
 }
 
+function cronfilter_fifteen_min($schedules){
+	// A 10 minute scheduler
+	$schedules['fifteen_min'] = array(
+			'interval' => 900,
+			'display' => __('Every 10 minutes')
+			);
+	return $schedules;
+}
+
 function it_newsmail_deactivate(){
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+	wp_clear_scheduled_hook('itnm_cronhook');
 
 	$sql = "DROP TABLE ".SUBSCRIBE_TABLE.";";
 	dbDelta($sql);
@@ -92,6 +108,25 @@ function itnm_queuePost($post_id) {
 		VALUES (%d, %d) ON DUPLICATE KEY UPDATE 
 		minutestamp = %d", $post_id, $minutes, $minutes);
 	$wpdb->query($sql);
+}
+
+function itnm_cron() {
+	global $wpdb;
+	$time = intval(current_time('timestamp')/60);
+
+	$sql = $wpdb->prepare("SELECT post_id FROM ".QUEUE_TABLE." WHERE minutestamp <= %d", $time);
+	$posts = $wpdb->get_results($sql);
+
+	foreach ($posts as $p) {
+		if(itnm_doMail($p->post_id)){
+			$sql = $wpdb->prepare("DELETE FROM ".QUEUE_TABLE." WHERE 
+				post_id = %d", $p->post_id);
+		} else {
+			$time += DELAY_TIME;
+			$sql = $wpdb->prepare("UPDATE ".QUEUE_TABLE." SET minutestamp = %d WHERE post_id = %d", $time, $p->post_id);
+		}
+		$wpdb->query($sql);
+	}
 }
 
 function itnm_doMail($post_id){
@@ -124,13 +159,17 @@ function itnm_doMail($post_id){
 		if($i % 90 == 89){
 			$headers['bcc'] = 'BCC: '.$recipients;	
 			$header = implode("\n", $headers);
-			wp_mail("", $subject, $message, $header);
+			if(!(wp_mail("", $subject, $message, $header))){
+				return false;
+			}
 			$recipients = "";		
 		}
 	}
-
-	$headers['bcc'] = 'BCC: '.$recipients;	
-	$header = implode("\n", $headers);
-	wp_mail("", $subject, $message, $header);
+	if($recipients !== ""){
+		$headers['bcc'] = 'BCC: '.$recipients;	
+		$header = implode("\n", $headers);
+		return wp_mail("", $subject, $message, $header);
+	}
+	return true;
 }
 ?>
