@@ -4,6 +4,7 @@
 	Plugin URI: https://chalmers.it
 	Description: Newsposts are mailed to users automatically. Users manage subscriptions via a widget 
 	Author: Max Witt
+	Version: 2.0
 	License: MIT
 */
 
@@ -73,9 +74,9 @@ function it_newsmail_deactivate(){
 function itnm_doMail($post_id){
 	$post = get_post($post_id);
 	$thecontent = apply_filters('the_content', $post->post_content);
-	$cat = get_the_category($post_id);
+	$cats = wp_get_post_categories($post_id);
 	$author = get_user_by('id', $post->post_author)->display_name;
-	$allrecipients = get_emails_for_category($cat->cat_ID);
+	$allrecipients = get_emails_for_categories($cats);
 
 	$subject = "Chalmers.it: ".$post->post_title;
 
