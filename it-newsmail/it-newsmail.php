@@ -146,7 +146,7 @@ function itnm_doMail($post_id){
 	$message .= $thecontent;
 	$message .= "<p><em>".$post->post_date." by ".$author."</em></p>";
 
-	$headers['from'] = 'From: Chalmers.it <noreply@chalmers.it>';
+	$headers['from'] = 'From: Chalmers.it <no-reply@chalmers.it>';
 	$headers['mime']     = 'MIME-Version: 1.0';
 	$headers['type']     = 'Content-Type: text/html; charset="utf8"';
 	
