@@ -97,6 +97,9 @@ function it_newsmail_deactivate(){
 
 	$sql = "DROP TABLE ".SUBSCRIBE_TABLE.";";
 	dbDelta($sql);
+
+	$sql = "DROP TABLE ".QUEUE_TABLE.";";
+	dbDelta($sql);
 }
 
 function itnm_queuePost($post_id) {
