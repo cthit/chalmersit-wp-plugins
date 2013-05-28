@@ -67,7 +67,7 @@ class ITNewsMail_Widget extends WP_Widget {
 				<?php 
 				foreach ($cats as $key => $value) { ?>
 					<label for="itnm<?php echo $key; ?>">
-					<input type="checkbox" id="itnm<?php echo $key; ?>" name="itnm<?php echo $key; ?>"
+					<input type="checkbox" <?if($key == "itnm-1") echo "class=\"itnm-allnews\" " ?>id="itnm<?php echo $key; ?>" name="itnm<?php echo $key; ?>"
 					<?php if($value['choice']) echo "checked"; ?>/> <?php echo $value['name']; ?></label>
 				<?php } ?>
 			</div>
