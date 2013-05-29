@@ -68,7 +68,7 @@ function extract_choices($POST){
 
 function get_choices_for_user($user_id){
 	global $wpdb;
-	$sql = "SELECT cat_id FROM ".IT_NEWSMAIL_TABLE." WHERE user_id = ".$user_id;
+	$sql = "SELECT cat_id FROM ".SUBSCRIBE_TABLE." WHERE user_id = ".$user_id;
 	$res = $wpdb->get_results($sql);
 	$cats = get_all_categories();
 
