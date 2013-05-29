@@ -44,7 +44,8 @@ class ITNewsMail_Widget extends WP_Widget {
 
 
 		$title = apply_filters('widget_title', $instance['title']);
-		if(is_user_logged_in()) :
+		$desctext = $instance['descriptext'];
+		if(is_user_logged_in() && (!$instance['catpage'] || is_category())) :
 
 		global $current_user;
 		get_currentuserinfo();
@@ -59,8 +60,12 @@ class ITNewsMail_Widget extends WP_Widget {
 		if($title) {
 			echo $before_title . $title . $after_title;
 		}
-		?>
 
+		if($desctext){
+			echo "<p>".$desctext."</p>";
+		}
+
+		?>
 		<form method="post" id="newsmail-widget-form" name="newsmail" action="">
 			<input type="hidden" name="action" value="it_newsmail" />
 			<div class="widget scroll">
@@ -103,17 +108,27 @@ class ITNewsMail_Widget extends WP_Widget {
 
 	function form($instance) {
 		$defaults = array(
-			"title" => "Maila ut nyheter"
+			"title" => "Maila ut nyheter",
+			"catpage" => false,
+			"descriptext" => ""
 			// Define default key-value pairs
 		);
 		$instance = wp_parse_args( (array) $instance, $defaults );
 
-		// Get any external data needed for the form
+		// Get any external data needed for the widget through the form
 		?>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e("Titel"); ?>:</label>
 			<input id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" value="<?php echo $instance['title']; ?>" class="widefat" />
+		</p>
+		<p>
+			<label for="<?php echo $this->get_field_id( 'descriptext' ); ?>"><?php _e("Beskrivning"); ?>:</label>
+			<input id="<?php echo $this->get_field_id( 'descriptext' ); ?>" name="<?php echo $this->get_field_name( 'descriptext' ); ?>" value="<?php echo $instance['descriptext']; ?>" class="widefat" />
+		</p>
+			<label for="<?php echo $this->get_field_id('catpage'); ?>"><?php _e("Visa endast för kategorisidor");?>
+			<input type="checkbox" id="<?php echo $this->get_field_id('catpage'); ?>" name="<?php echo $this->get_field_name('catpage'); ?>" value="true" <?if($instance['catpage']) echo "checked"; ?> />
+			</label>
 		</p>
 
 		<?php
