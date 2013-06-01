@@ -28,3 +28,4 @@ $('#allNews-chkbx').on("click", function() {
 $('.itnm-cat-chkbx').on("click", function() {
 	itnm_category_modified();
 });
+itnm_category_modified();
