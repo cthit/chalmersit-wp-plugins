@@ -19,14 +19,12 @@ function itnm_category_modified(){
 	$('#allNews-chkbx').prop('checked', allChecked);
 }
 
-alert("Script loaded!");
 
-window.onload = function(){
-	$('#allNews-chkbx').on("click", function() {
-		itnm_allNews_modified();
-	});
 
-	$('.itnm-cat-chkbx').on("click", function() {
-		itnm_category_modified();
-	})
-}
+$('#allNews-chkbx').on("click", function() {
+	itnm_allNews_modified();
+});
+
+$('.itnm-cat-chkbx').on("click", function() {
+	itnm_category_modified();
+});
