@@ -68,12 +68,16 @@ class ITNewsMail_Widget extends WP_Widget {
 		?>
 		<form method="post" id="newsmail-widget-form" name="newsmail" action="">
 			<input type="hidden" name="action" value="it_newsmail" />
+		<?php if(!is_category()) : ?>
+			<label for="allNews-chkbx">
+			<input type="checkbox" id="allNews-chkbx" name="allNews-chkbx" />Alla nyheter</label>
+		<?php endif; ?>
 			<div class="widget scroll">
 				<?php 
 				foreach ($cats as $key => $value) { 
 					if(!is_category() || is_category($key)){?>
 					<label for="itnm<?php echo $key; ?>">
-					<input type="checkbox" <?if($key == "itnm-1") echo "class=\"itnm-allnews\" " ?>id="itnm<?php echo $key; ?>" name="itnm<?php echo $key; ?>"
+					<input type="checkbox" class="itnm-cat-chkbx" id="itnm<?php echo $key; ?>" name="itnm<?php echo $key; ?>"
 					<?php if($value['choice']) echo "checked"; ?>/> <?php echo $value['name']; ?></label>
 				<?php 
 					}

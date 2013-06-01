@@ -10,13 +10,16 @@ function get_emails_for_categories($cats){
 	global $wpdb;
 	
 	$catString = "";
-
+	$i = 0;
 	foreach ($cats as $id) {
-		$catString .= " OR cat_id = ".$id;
+		if($i >= 0){
+			$catString.= " OR ";
+		}
+		$catString .= "cat_id = ".$id;
+		$i++;
 	}
-
 	$sql = "SELECT user_email FROM it_newsmail, it_users WHERE 
-	it_users.ID = it_newsmail.user_id AND (cat_id = -1".$catString.") GROUP BY user_email;";
+	it_users.ID = it_newsmail.user_id AND (".$catString.") GROUP BY user_email;";
 	$res = $wpdb->get_results($sql);
 
 	$emails = array();
@@ -33,9 +36,6 @@ function get_all_categories() {
 		"hide_empty" => 0));
 
 	$cats = array();
-	$cats[-1] = array(
-		"name" => "Alla nyheter",
-		"choice" => false);
 	foreach ($catObjs as $obj) {
 		$cats[$obj->term_id] = array(
 			"name" => $obj->name,
