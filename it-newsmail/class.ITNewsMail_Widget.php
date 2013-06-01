@@ -44,20 +44,14 @@ class ITNewsMail_Widget extends WP_Widget {
 
 
 		$title = apply_filters('widget_title', $instance['title']);
-		if(is_user_logged_in()) :
+		$desctext = $instance['descriptext'];
+		if(is_user_logged_in() && (!$instance['catpage'] || is_category())) :
 
 		global $current_user;
 		get_currentuserinfo();
 
+		$cats = get_choices_for_user($current_user->ID);
 
-
-		$cats = get_categories_for_user($current_user->ID);
-		$sub_all_news = false;
-
-		foreach ($cats as $cat) {
-			if($cat->cat_id == "-1")
-				$sub_all_news = true;
-		}
 		// Get categories, find out if user is subscribing, set values in the form
 		ob_start();
 
@@ -66,12 +60,28 @@ class ITNewsMail_Widget extends WP_Widget {
 		if($title) {
 			echo $before_title . $title . $after_title;
 		}
-		?>
 
+		if($desctext){
+			echo "<p>".$desctext."</p>";
+		}
+
+		?>
 		<form method="post" id="newsmail-widget-form" name="newsmail" action="">
 			<input type="hidden" name="action" value="it_newsmail" />
+		<?php if(!is_category()) : ?>
+			<label for="allNews-chkbx">
+			<input type="checkbox" id="allNews-chkbx" name="allNews-chkbx" />Alla nyheter</label>
+		<?php endif; ?>
 			<div class="widget scroll">
-				<label for="itnm-1"><input type="checkbox" id="itnm-1" name="itnm-1" <?if($sub_all_news) echo "checked"; ?>/> Alla nyheter</label>
+				<?php 
+				foreach ($cats as $key => $value) { 
+					if(!is_category() || is_category($key)){?>
+					<label for="itnm<?php echo $key; ?>">
+					<input type="checkbox" class="itnm-cat-chkbx" id="itnm<?php echo $key; ?>" name="itnm<?php echo $key; ?>"
+					<?php if($value['choice']) echo "checked"; ?>/> <?php echo $value['name']; ?></label>
+				<?php 
+					}
+				} ?>
 			</div>
 			<input type="submit" value="Spara" />
 		</form>
@@ -105,17 +115,27 @@ class ITNewsMail_Widget extends WP_Widget {
 
 	function form($instance) {
 		$defaults = array(
-			"title" => "Maila ut nyheter"
+			"title" => "Maila ut nyheter",
+			"catpage" => false,
+			"descriptext" => ""
 			// Define default key-value pairs
 		);
 		$instance = wp_parse_args( (array) $instance, $defaults );
 
-		// Get any external data needed for the form
+		// Get any external data needed for the widget through the form
 		?>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e("Titel"); ?>:</label>
 			<input id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" value="<?php echo $instance['title']; ?>" class="widefat" />
+		</p>
+		<p>
+			<label for="<?php echo $this->get_field_id( 'descriptext' ); ?>"><?php _e("Beskrivning"); ?>:</label>
+			<input id="<?php echo $this->get_field_id( 'descriptext' ); ?>" name="<?php echo $this->get_field_name( 'descriptext' ); ?>" value="<?php echo $instance['descriptext']; ?>" class="widefat" />
+		</p>
+			<label for="<?php echo $this->get_field_id('catpage'); ?>"><?php _e("Visa endast för kategorisidor");?>
+			<input type="checkbox" id="<?php echo $this->get_field_id('catpage'); ?>" name="<?php echo $this->get_field_name('catpage'); ?>" value="true" <?if($instance['catpage']) echo "checked"; ?> />
+			</label>
 		</p>
 
 		<?php
