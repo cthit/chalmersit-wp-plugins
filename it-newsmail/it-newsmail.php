@@ -19,6 +19,7 @@ add_filter('cron_schedules', 'cronfilter_fifteen_min');
 add_action('itnm_cronhook', 'itnm_cron');
 add_action("init", "itnm_register_subscription");
 add_action("publish_post", "itnm_queuePost");
+add_action("wp_enqueue_scripts", "itnm_scripts");
 
 
 require_once "class.ITNewsMail_Widget.php";
@@ -79,6 +80,11 @@ function it_newsmail_activate(){
 		);";
 
 	dbDelta($sql);
+}
+
+function itnm_scripts(){
+	wp_register_script('it_newsmail', plugins_url("newsmail_js.js", __FILE__), array("jquery"), null, true);
+	wp_enqueue_script('it_newsmail');
 }
 
 function cronfilter_fifteen_min($schedules){
