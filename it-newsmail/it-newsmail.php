@@ -24,6 +24,7 @@ add_action("wp_enqueue_scripts", "itnm_scripts");
 
 require_once "class.ITNewsMail_Widget.php";
 require_once "functions.php";
+require_once "entityhooks.php";
 
 ITNewsMail_Widget::init();
 
