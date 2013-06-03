@@ -18,7 +18,7 @@ function get_emails_for_categories($cats){
 		$catString .= "cat_id = ".$id;
 		$i++;
 	}
-	$sql = "SELECT user_email FROM it_newsmail, it_users WHERE 
+	$sql = "SELECT user_email FROM ".SUBSCRIBE_TABLE.", it_users WHERE 
 	it_users.ID = it_newsmail.user_id AND (".$catString.") GROUP BY user_email;";
 	$res = $wpdb->get_results($sql);
 
