@@ -4,7 +4,7 @@
 	Plugin URI: https://chalmers.it
 	Description: Newsposts are mailed to users automatically. Users manage subscriptions via a widget 
 	Author: Max Witt
-	Version: 2.0
+	Version: 2.1
 	License: cc-by-sa
 */
 
@@ -24,6 +24,7 @@ add_action("wp_enqueue_scripts", "itnm_scripts");
 
 require_once "class.ITNewsMail_Widget.php";
 require_once "functions.php";
+require_once "entityhooks.php";
 
 ITNewsMail_Widget::init();
 
