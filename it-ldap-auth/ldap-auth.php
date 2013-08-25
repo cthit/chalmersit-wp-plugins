@@ -23,19 +23,21 @@ function ldap_authenticate($user, $login, $pass) {
 define("COOKIE_NAME", "chalmersItAuth");
 define("BASE_PATH", "https://chalmers.it/auth/userInfo.php");
 
-function wp_validate_auth_cookie() {
+if (!function_exists("wp_validate_auth_cookie")) {
+	function wp_validate_auth_cookie() {
 
-	$url =  BASE_PATH . "?token=" . $_COOKIE[COOKIE_NAME];
+		$url =  BASE_PATH . "?token=" . $_COOKIE[COOKIE_NAME];
 
-	$user_json = file_get_contents($url);
-	$user_data = json_decode($user_json, true);
+		$user_json = file_get_contents($url);
+		$user_data = json_decode($user_json, true);
 
-	$user = get_user_by('login', $user_data["cid"]);
+		$user = get_user_by('login', $user_data["cid"]);
 
-	if ( ! $user ) {
-		do_action('auth_cookie_bad_username', $cookie_elements);
-		return false;
+		if ( ! $user ) {
+			do_action('auth_cookie_bad_username', $cookie_elements);
+			return false;
+		}
+
+		return $user->ID;
 	}
-
-	return $user->ID;
 }
