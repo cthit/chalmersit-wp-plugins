@@ -14,11 +14,11 @@ define("BASE_PATH", "https://chalmers.it/auth/");
 
 define("IT_LDAP_ACTION", BASE_PATH . "login.php");
 define("IT_LDAP_ACTION_LOGOUT", BASE_PATH . "logout.php");
+define("IT_LDAP_ACTION_RESET", BASE_PATH . "resetpass.php");
 
 add_filter('login_url', 'it_auth_login', 0, 2);
-
-remove_all_filters('logout_url');
 add_filter('logout_url', 'it_auth_logout', 0, 2);
+add_filter('lostpassword_url', 'it_auth_reset', 0);
 
 function it_auth_login($url, $redirect) {
 	return IT_LDAP_ACTION;
@@ -26,6 +26,10 @@ function it_auth_login($url, $redirect) {
 
 function it_auth_logout($url, $redirect) {
 	return IT_LDAP_ACTION_LOGOUT;
+}
+
+function it_auth_reset($url) {
+	return IT_LDAP_ACTION_RESET;
 }
 
 
