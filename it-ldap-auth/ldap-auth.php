@@ -9,17 +9,6 @@
 	License: MIT
 */
 
-/*remove_all_filters('authenticate');
-
-add_filter('authenticate', 'ldap_authenticate', 1, 3);
-
-function ldap_authenticate($user, $login, $pass) {
-	var_dump($login);
-	var_dump($pass);
-
-	return new WP_User(4);
-}*/
-
 define("COOKIE_NAME", "chalmersItAuth");
 define("BASE_PATH", "https://chalmers.it/auth/");
 
@@ -27,6 +16,8 @@ define("IT_LDAP_ACTION", BASE_PATH . "login.php");
 define("IT_LDAP_ACTION_LOGOUT", BASE_PATH . "logout.php");
 
 add_filter('login_url', 'it_auth_login', 0, 2);
+
+remove_all_filters('logout_url', 10);
 add_filter('logout_url', 'it_auth_logout', 0, 2);
 
 function it_auth_login($url, $redirect) {
