@@ -17,7 +17,7 @@ define("IT_LDAP_ACTION_LOGOUT", BASE_PATH . "logout.php");
 
 add_filter('login_url', 'it_auth_login', 0, 2);
 
-remove_all_filters('logout_url', 10);
+remove_all_filters('logout_url');
 add_filter('logout_url', 'it_auth_logout', 0, 2);
 
 function it_auth_login($url, $redirect) {
