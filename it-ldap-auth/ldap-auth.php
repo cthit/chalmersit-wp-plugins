@@ -26,6 +26,18 @@ define("BASE_PATH", "https://chalmers.it/auth/");
 define("IT_LDAP_ACTION", BASE_PATH . "login.php");
 define("IT_LDAP_ACTION_LOGOUT", BASE_PATH . "logout.php");
 
+add_filters('login_url', 'it_auth_login', 0, 2);
+add_filters('logout_url', 'it_auth_logout', 0, 2);
+
+function it_auth_login($url, $redirect) {
+	return IT_LDAP_ACTION . "?redirect_to=" . urlencode($redirect);
+}
+
+function it_auth_logout($url, $redirect) {
+	return IT_LDAP_ACTION_LOGOUT . "?redirect_to=" . urlencode($redirect);
+}
+
+
 if (!function_exists("wp_validate_auth_cookie")) {
 	function wp_validate_auth_cookie() {
 
