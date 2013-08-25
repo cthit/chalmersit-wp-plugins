@@ -30,12 +30,10 @@ add_filter('login_url', 'it_auth_login', 0, 2);
 add_filter('logout_url', 'it_auth_logout', 0, 2);
 
 function it_auth_login($url, $redirect) {
-	echo $url;
 	return IT_LDAP_ACTION . "?redirect_to=" . urlencode($redirect);
 }
 
 function it_auth_logout($url, $redirect) {
-	echo $url;
 	return IT_LDAP_ACTION_LOGOUT . "?redirect_to=" . urlencode($redirect);
 }
 
