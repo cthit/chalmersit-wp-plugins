@@ -21,12 +21,15 @@ function ldap_authenticate($user, $login, $pass) {
 }*/
 
 define("COOKIE_NAME", "chalmersItAuth");
-define("BASE_PATH", "https://chalmers.it/auth/userInfo.php");
+define("BASE_PATH", "https://chalmers.it/auth/");
+
+define("IT_LDAP_ACTION", BASE_PATH . "login.php");
+define("IT_LDAP_ACTION_LOGOUT", BASE_PATH . "logout.php");
 
 if (!function_exists("wp_validate_auth_cookie")) {
 	function wp_validate_auth_cookie() {
 
-		$url =  BASE_PATH . "?token=" . $_COOKIE[COOKIE_NAME];
+		$url =  BASE_PATH . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
 
 		$user_json = file_get_contents($url);
 		$user_data = json_decode($user_json, true);
