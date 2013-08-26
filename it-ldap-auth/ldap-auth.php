@@ -32,7 +32,7 @@ function format_wp_user($data) {
 	$userdata = array(
 		"user_login" => $data["cid"],
 		"user_pass" => "this password is not used",
-		"user_mail" => $data["mail"],
+		"user_email" => $data["mail"],
 		"nickname" => $data["nick"],
 		"first_name" => $data["firstname"],
 		"last_name" => $data["lastname"]
@@ -54,10 +54,12 @@ if (!function_exists("wp_validate_auth_cookie")) {
 		}
 		$user = get_user_by('login', $user_data["cid"]);
 
+		$data = format_wp_user($user_data);
 		if ( $user ) {
-			return wp_update_user(format_wp_user($user_data));
+			$data["ID"] = $user->ID;
+			return wp_update_user($data);
 		} else {
-			return wp_insert_user(format_wp_user($user_data));
+			return wp_insert_user($data);
 		}
 	}
 }
