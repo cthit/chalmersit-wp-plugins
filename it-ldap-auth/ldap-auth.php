@@ -27,6 +27,20 @@ function it_auth_logout($url, $redirect) {
 	return IT_LDAP_ACTION_LOGOUT;
 }
 
+
+function format_wp_user($data) {
+	$userdata = array(
+		"user_login" => $data["cid"],
+		"user_pass" => "this password is not used",
+		"user_mail" => $data["mail"],
+		"nickname" => $data["nick"],
+		"first_name" => $data["firstname"],
+		"last_name" => $data["lastname"]
+	);
+
+	return $userdata;
+}
+
 if (!function_exists("wp_validate_auth_cookie")) {
 	function wp_validate_auth_cookie() {
 
@@ -35,13 +49,15 @@ if (!function_exists("wp_validate_auth_cookie")) {
 		$user_json = file_get_contents($url);
 		$user_data = json_decode($user_json, true);
 
-		$user = get_user_by('login', $user_data["cid"]);
-
-		if ( ! $user ) {
-			do_action('auth_cookie_bad_username', $cookie_elements);
+		if ($user_data === null) {
 			return false;
 		}
+		$user = get_user_by('login', $user_data["cid"]);
 
-		return $user->ID;
+		if ( $user ) {
+			return wp_update_user(format_wp_user($user_data));
+		} else {
+			return wp_insert_user(format_wp_user($user_data));
+		}
 	}
 }
