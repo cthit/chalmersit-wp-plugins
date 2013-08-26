@@ -41,25 +41,71 @@ function format_wp_user($data) {
 	return $userdata;
 }
 
-if (!function_exists("wp_validate_auth_cookie")) {
-	function wp_validate_auth_cookie() {
+if ( !function_exists('wp_validate_auth_cookie') ) :
+/**
+ * Validates authentication cookie.
+ *
+ * @return bool|int False if invalid cookie, User ID if valid.
+ */
+function wp_validate_auth_cookie() {
 
-		$url =  BASE_PATH . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
+	$url =  BASE_PATH . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
 
-		$user_json = file_get_contents($url);
-		$user_data = json_decode($user_json, true);
+	$user_json = file_get_contents($url);
+	$user_data = json_decode($user_json, true);
 
-		if ($user_data === null) {
-			return false;
-		}
-		$user = get_user_by('login', $user_data["cid"]);
+	if ($user_data === null) {
+		return false;
+	}
+	$user = get_user_by('login', $user_data["cid"]);
 
-		$data = format_wp_user($user_data);
-		if ( $user ) {
-			$data["ID"] = $user->ID;
-			return $user->ID; # wp_update_user($data);
-		} else {
-			return wp_insert_user($data);
-		}
+	$data = format_wp_user($user_data);
+	if ( $user ) {
+		return $user->ID;
+	} else {
+		return wp_insert_user($data);
 	}
 }
+endif;
+
+if ( !function_exists('wp_authenticate') ) :
+/**
+ * Checks a user's login information and logs them in if it checks out.
+ *
+ * @since 2.5.0
+ *
+ * @param string $username User's username
+ * @param string $password User's password
+ * @return WP_Error|WP_User WP_User object if login successful, otherwise WP_Error object.
+ */
+function wp_authenticate($username, $password) {
+	$username = sanitize_user($username);
+	$password = trim($password);
+
+	$user = apply_filters('authenticate', null, $username, $password);
+
+	if ( $user == null ) {
+		// TODO what should the error message be? (Or would these even happen?)
+		// Only needed if all authentication handlers fail to return anything.
+		$user = new WP_Error('authentication_failed', __('<strong>ERROR</strong>: Invalid username or incorrect password.'));
+	}
+
+	$ignore_codes = array('empty_username', 'empty_password');
+
+	if (is_wp_error($user) && !in_array($user->get_error_code(), $ignore_codes) ) {
+		do_action('wp_login_failed', $username);
+	}
+
+	$url =  BASE_PATH . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
+
+	$user_json = file_get_contents($url);
+	$user_data = json_decode($user_json, true);
+
+	$new_data = format_wp_user($user_data);
+	$new_data["ID"] = $user->ID;
+	
+	wp_update_user($new_data);
+
+	return $user;
+}
+endif;
