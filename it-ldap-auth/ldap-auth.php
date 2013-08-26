@@ -57,7 +57,7 @@ if (!function_exists("wp_validate_auth_cookie")) {
 		$data = format_wp_user($user_data);
 		if ( $user ) {
 			$data["ID"] = $user->ID;
-			return wp_update_user($data);
+			return $user->ID; # wp_update_user($data);
 		} else {
 			return wp_insert_user($data);
 		}
