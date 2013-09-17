@@ -21,7 +21,8 @@ $IT_BOOKINGS_TEMPLATE_PATH = IT_BOOKING_PATH."/templates/_bookings.php";
 # Mail configuration
 
 $mail_variables = array(
-	"receivers" => array(),			# String array with mail addresses
+	"hubben_receivers" => array(),			# String array with mail addresses
+	"grouproom_receivers" => array(),
 	"party_receivers" => array()
 );
 
@@ -212,7 +213,11 @@ function send_mail($booking, $is_party_booking) {
 	} else {
 		$subject = "Bokning".$subject;
 		$message .= "Hugg Hugg Puss Puss\n";
-		$receivers = $mail_variables['receivers'];
+		if ($booking->getLocation() == "Hubben") {
+			$receivers = $mail_variables['hubben_receivers'];
+		} else {
+			$receivers = $mail_variables['grouproom_receivers'];
+		}
 	}
 	
 	$user = get_user_by("id", $booking->getUserID());
@@ -253,9 +258,10 @@ function it_bookings_notice() {
 	<?php
 }
 
-function set_booking_emails($emails) {
+function set_booking_emails($hubben_emails, $grouproom_emails) {
 	global $mail_variables;
-	$mail_variables['receivers'] = $emails;
+	$mail_variables['hubben_receivers'] = $hubben_emails;
+	$mail_variables['grouproom_receivers'] = $grouproom_emails;
 }
 
 function set_party_booking_emails($emails) {
