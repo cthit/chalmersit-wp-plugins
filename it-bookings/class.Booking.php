@@ -13,7 +13,9 @@ class Booking {
 	private $title;
 	private $location;
 	private $start_timestamp;
+	private $startHr;
 	private $end_timestamp;
+	private $endHr;
 	private $is_repeating;
 
 	private $booker_phone;
@@ -28,12 +30,16 @@ class Booking {
 	private $lunchroom_booking_start;
 	private $lunchroom_booking_end;
 
+	
+
 	function __construct($params = array()) {
 
 		$this->title = $params["title"];
 		$this->location = $params["location"];
 		$this->start_timestamp = $this->stringToMysqlDatetime($params["start_date"]);
+		$this->startHr = strtotime($params["start_date"]);
 		$this->end_timestamp = $this->stringToMysqlDatetime($params["end_date"]);
+		$this->endHr = strtotime($params["end_date"]);
 		$this->user = $params["user_id"];
 		$this->booker_phone = preg_replace('/[^0-9]/s', '', $params["phone"]);
 		$this->description = $params['description'];
@@ -48,6 +54,8 @@ class Booking {
 		$this->booking_time_weekend = 00;
 		$this->lunchroom_booking_start = 12;
 		$this->lunchroom_booking_end = 13;
+
+		
 	}
 
 	protected function stringToMysqlDatetime($str) {
@@ -166,6 +174,9 @@ class Booking {
 
 	public function validate() {
 
+		$forbidden_groupRoom = array(8,9,10,11,13,14,15,16,32,33,34,35,37,38,39,40,56,57,58,59,61,62,63,64,80,81,82,83,85,86,87,88,104,105,106,107,109,110,111,112);
+		$forbidden_hubben = array(8,9,10,11,12,13,14,15,16,32,33,34,35,36,37,38,39,40,56,57,58,59,60,61,62,63,64,80,81,82,83,84,85,86,87,88,104,105,106,107,108,109,110,111,112);
+
 		# Title can't be empty
 		if(empty($this->title)) {
 			$this->errors["empty_title"] = "Du måste fylla i en titel";
@@ -196,22 +207,26 @@ class Booking {
 			$this->errors['location_not_allowed'] = "Lokalen finns inte: $this->location.";
 		}
 
-		if( 
-			$this->location == "Hubben" && 
-			!$this->isBookedOnWeekend() && 
-			date('G', strtotime($this->start_timestamp)) < $this->booking_time_weekday) {
-
-			$this->errors["too_early_weekday_booking"] = "Du kan inte boka ".$this->location." innan $this->booking_time_weekday på vardagar";
+		$startHr = intval($this->startHr/3600);
+		$endHr = intval($this->endHr/3600);
+		if($this->location == "Hubben") {
+			for ($i = $startHr; $i < $endHr ; $i++) { 
+				$hr = ($i%168)-96;
+				if (in_array($hr, $forbidden_hubben)) {			
+					$this->errors["too_early_weekday_booking"] = "Du kan inte boka ".$this->location." innan $this->booking_time_weekday på vardagar";
+					break;
+				}
+			}
 		}
-		
-		if($this->location == "Grupprummet" && 
-			!$this->isBookedOnWeekend() &&
-			(date('G', strtotime($this->start_timestamp)) < $this->lunchroom_booking_start || 
-			date('G', strtotime($this->end_timestamp)) > $this->lunchroom_booking_end ) && 
-			date('G', strtotime($this->start_timestamp)) < $this->booking_time_weekday
-		) {
-			$this->errors['lunchroom_overlap'] = "Du kan inte boka ".$this->location." utanför tiderna ".
-				$this->lunchroom_booking_start."-".$this->lunchroom_booking_end. ", ".$this->booking_time_weekday."-";
+		if($this->location == "Grupprummet") {
+			for ($i=$startHr; $i < $endHr; $i++) { 
+				$hr = ($i%168)-96;
+				if (in_array($hr, $forbidden_groupRoom)) {
+					$this->errors['lunchroom_overlap'] = "Du kan inte boka ".$this->location." utanför tiderna ".
+						$this->lunchroom_booking_start."-".$this->lunchroom_booking_end. ", ".$this->booking_time_weekday."-";
+					break;
+				}
+			}
 		}
 
 		# Check group constraints on rooms
