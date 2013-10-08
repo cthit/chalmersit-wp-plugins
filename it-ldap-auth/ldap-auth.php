@@ -9,47 +9,69 @@
 	License: MIT
 */
 
-define("COOKIE_NAME", "chalmersItAuth");
-define("BASE_PATH", "https://chalmers.it/auth/");
+define("BASE", "https://chalmers.it/auth/");
+define("IT_LOGIN_URL", BASE . "login.php");
+define("IT_LOGOUT_URL", BASE . "logout.php");
+define("IT_FORGOT_URL", BASE . "resetpass.php");
 
-define("IT_LDAP_ACTION", BASE_PATH . "login.php");
-define("IT_LDAP_ACTION_LOGOUT", BASE_PATH . "logout.php");
-define("IT_LDAP_ACTION_RESET", BASE_PATH . "resetpass.php");
+class IT_Auth {
 
-add_filter('login_url', 'it_auth_login', 0, 2);
-add_filter('logout_url', 'it_auth_logout', 0, 2);
+	public function __construct() {
+		add_action('personal_options_update', array(&$this, 'updatepass'));
+		add_action('edit_user_profile_update', array(&$this, 'updatepass'));
+		add_filter('logout_url', array(&$this, 'it_logout_url'), 11, 1);
 
-function it_auth_login($url, $redirect) {
-	return IT_LDAP_ACTION;
-}
+	}
+	private function format_redirect($url, $redir) {
+		if (empty($redir)) {
+			return $url;
+		} else {
+			return $url . "?redirect_to=" . urlencode($redir);
+		}
+	}
+	public function it_login_url($redirect = '') {
+		return $this->format_redirect(IT_LOGIN_URL, $redirect);
+	}
+	public function it_logout_url($url) {
+		return $this->format_redirect(IT_LOGOUT_URL, "http://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"]);
+	}
+	public function it_lostpassword_url($redirect = '') {
+		return $this->format_redirect(IT_FORGOT_URL, $redirect);
+	}
+	public function updatepass($user_id) {
+		$d = array('user_pass' => uniqid('nopass').microtime());
+		$result = wp_update_user($d);
 
-function it_auth_logout($url, $redirect) {
-	return IT_LDAP_ACTION_LOGOUT;
-}
+		if ( !current_user_can( 'edit_user', $user_id ) ) return false;
+		if ( $_POST['pass1'].'x' != $_POST['pass2'].'x' ) return false;
+		global $current_user;
+		if ( ! $current_user ) return false;
+
+		wp_remote_post(IT_FORGOT_URL, array("password" => $_POST['pass1'], "cookie" => $_COOKIE[COOKIE_NAME]));
+	}
+
+};
+$it_auth = new IT_Auth();
+global $it_auth;
+
+
+if (!function_exists("wp_validate_auth_cookie")) :
 
 
 function format_wp_user($data) {
-	$userdata = array(
+	return array(
 		"user_login" => $data["cid"],
-		"user_pass" => "this password is not used",
+		"user_pass" => uniqid('nopass').microtime(),
 		"user_email" => $data["mail"],
 		"nickname" => $data["nick"],
 		"first_name" => $data["firstname"],
 		"last_name" => $data["lastname"]
 	);
-
-	return $userdata;
 }
 
-if ( !function_exists('wp_validate_auth_cookie') ) :
-/**
- * Validates authentication cookie.
- *
- * @return bool|int False if invalid cookie, User ID if valid.
- */
 function wp_validate_auth_cookie() {
 
-	$url =  BASE_PATH . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
+	$url =  BASE . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
 
 	$user_json = file_get_contents($url);
 	$user_data = json_decode($user_json, true);
@@ -65,47 +87,5 @@ function wp_validate_auth_cookie() {
 	} else {
 		return wp_insert_user($data);
 	}
-}
-endif;
-
-if ( !function_exists('wp_authenticate') ) :
-/**
- * Checks a user's login information and logs them in if it checks out.
- *
- * @since 2.5.0
- *
- * @param string $username User's username
- * @param string $password User's password
- * @return WP_Error|WP_User WP_User object if login successful, otherwise WP_Error object.
- */
-function wp_authenticate($username, $password) {
-	$username = sanitize_user($username);
-	$password = trim($password);
-
-	$user = apply_filters('authenticate', null, $username, $password);
-
-	if ( $user == null ) {
-		// TODO what should the error message be? (Or would these even happen?)
-		// Only needed if all authentication handlers fail to return anything.
-		$user = new WP_Error('authentication_failed', __('<strong>ERROR</strong>: Invalid username or incorrect password.'));
-	}
-
-	$ignore_codes = array('empty_username', 'empty_password');
-
-	if (is_wp_error($user) && !in_array($user->get_error_code(), $ignore_codes) ) {
-		do_action('wp_login_failed', $username);
-	}
-
-	$url =  BASE_PATH . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
-
-	$user_json = file_get_contents($url);
-	$user_data = json_decode($user_json, true);
-
-	$new_data = format_wp_user($user_data);
-	$new_data["ID"] = $user->ID;
-	
-	wp_update_user($new_data);
-
-	return $user;
 }
 endif;
