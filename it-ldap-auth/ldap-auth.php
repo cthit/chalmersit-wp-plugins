@@ -9,6 +9,7 @@
 	License: MIT
 */
 
+define("COOKIE_NAME", "chalmersItAuth");
 define("BASE", "https://chalmers.it/auth/");
 define("IT_LOGIN_URL", BASE . "login.php");
 define("IT_LOGOUT_URL", BASE . "logout.php");
@@ -81,10 +82,10 @@ function wp_validate_auth_cookie() {
 	}
 	$user = get_user_by('login', $user_data["cid"]);
 
-	$data = format_wp_user($user_data);
 	if ( $user ) {
 		return $user->ID;
 	} else {
+		$data = format_wp_user($user_data);
 		return wp_insert_user($data);
 	}
 }
