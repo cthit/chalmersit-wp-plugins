@@ -76,8 +76,6 @@ function format_wp_user($data) {
 }
 
 function wp_validate_auth_cookie() {
-	return 1;
-
 	$url =  BASE . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
 
 	$user_json = file_get_contents($url);
