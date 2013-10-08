@@ -9,29 +9,33 @@
 	License: MIT
 */
 
-define("COOKIE_NAME", "chalmersItAuth");
-define("BASE_PATH", "https://chalmers.it/auth/");
 
-define("IT_LDAP_ACTION", BASE_PATH . "login.php");
-define("IT_LDAP_ACTION_LOGOUT", BASE_PATH . "logout.php");
-define("IT_LDAP_ACTION_RESET", BASE_PATH . "resetpass.php");
+class IT_Auth {
 
-function it_auth_login($url, $redirect) {
-	return IT_LDAP_ACTION;
-}
+	public function __construct() {
+		add_filter('login_url', array($this, 'it_login_url'));
+		add_filter('logout_url', array($this, 'it_logout_url'));
+		add_filter('lostpassword_url', array($this, 'it_lostpassword_url'));
 
-function it_auth_logout($url, $redirect) {
-	return IT_LDAP_ACTION_LOGOUT;
-}
+		add_action('personal_options_update', 'ldap_login_password_and_role_manager_userprofile');
+		add_action('edit_user_profile_update', 'ldap_login_password_and_role_manager_userprofile');
 
-// add_action('retrieve_password', 'lost_password', 10, 1);
+		// Remove default authentication
+		remove_filter('authenticate', 'wp_authenticate_username_password', 20, 3);
+	}
+	public function it_login_url($login_url) {
+		die($login_url);
+	}
+	public function it_logout_url($logout_url) {
+		die($logout_url);
+	}
+	public function it_lostpassword_url($lostpassword_url) {
+		die($lostpassword_url);
+	}
 
-//show_user_profile
-//edit_user_profile
+};
+$auth = new IT_Auth();
 
-function lost_password($cid) {
-	wp_remote_post(BASE_PATH."resetpass.php", array("username" => $cid, "no-redirect" => true));
-}
 
 if (!function_exists("wp_validate_auth_cookie")) {
 	function wp_validate_auth_cookie() {
