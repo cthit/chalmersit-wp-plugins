@@ -9,38 +9,57 @@
 	License: MIT
 */
 
+define("COOKIE_NAME", "chalmersItAuth");
+define("BASE", "https://chalmers.it/auth/");
+define("IT_LOGIN_URL", BASE . "login.php");
+define("IT_LOGOUT_URL", BASE . "logout.php");
+define("IT_FORGOT_URL", BASE . "resetpass.php");
 
 class IT_Auth {
 
 	public function __construct() {
-		add_filter('login_url', array($this, 'it_login_url'));
-		add_filter('logout_url', array($this, 'it_logout_url'));
-		add_filter('lostpassword_url', array($this, 'it_lostpassword_url'));
+		add_action('personal_options_update', array(&$this, 'updatepass'));
+		add_action('edit_user_profile_update', array(&$this, 'updatepass'));
+		add_filter('logout_url', array(&$this, 'it_logout_url'), 11, 1);
 
-		add_action('personal_options_update', 'ldap_login_password_and_role_manager_userprofile');
-		add_action('edit_user_profile_update', 'ldap_login_password_and_role_manager_userprofile');
+	}
+	private function format_redirect($url, $redir) {
+		if (empty($redir)) {
+			return $url;
+		} else {
+			return $url . "?redirect_to=" . urlencode($redir);
+		}
+	}
+	public function it_login_url($redirect = '') {
+		return $this->format_redirect(IT_LOGIN_URL, $redirect);
+	}
+	public function it_logout_url($url) {
+		return $this->format_redirect(IT_LOGOUT_URL, "http://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"]);
+	}
+	public function it_lostpassword_url($redirect = '') {
+		return $this->format_redirect(IT_FORGOT_URL, $redirect);
+	}
+	public function updatepass($user_id) {
+		$d = array('user_pass' => uniqid('nopass').microtime());
+		$result = wp_update_user($d);
 
-		// Remove default authentication
-		remove_filter('authenticate', 'wp_authenticate_username_password', 20, 3);
-	}
-	public function it_login_url($login_url) {
-		die($login_url);
-	}
-	public function it_logout_url($logout_url) {
-		die($logout_url);
-	}
-	public function it_lostpassword_url($lostpassword_url) {
-		die($lostpassword_url);
+		if ( !current_user_can( 'edit_user', $user_id ) ) return false;
+		if ( $_POST['pass1'].'x' != $_POST['pass2'].'x' ) return false;
+		global $current_user;
+		if ( ! $current_user ) return false;
+
+		wp_remote_post(IT_FORGOT_URL, array("password" => $_POST['pass1'], "cookie" => $_COOKIE[COOKIE_NAME]));
 	}
 
 };
-$auth = new IT_Auth();
+$it_auth = new IT_Auth();
+global $it_auth;
 
 
 if (!function_exists("wp_validate_auth_cookie")) {
 	function wp_validate_auth_cookie() {
 
-		$url =  BASE_PATH . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
+		$url = BASE . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
 
 		$user_json = file_get_contents($url);
 		$user_data = json_decode($user_json, true);
@@ -55,24 +74,3 @@ if (!function_exists("wp_validate_auth_cookie")) {
 		return $user->ID;
 	}
 }
-
-if ( !function_exists('wp_set_password') ) :
-/**
- * Updates the user's password with a new encrypted one.
- *
- * For integration with other applications, this function can be overwritten to
- * instead use the other package password checking algorithm.
- *
- * @since 2.5
- * @uses $wpdb WordPress database object for queries
- * @uses wp_hash_password() Used to encrypt the user's password before passing to the database
- *
- * @param string $password The plaintext new user password
- * @param int $user_id User ID
- */
-function wp_set_password( $password, $user_id ) {
-	$token = $_COOKIE[COOKIE_NAME];
-	wp_remote_post(BASE_PATH."resetpass.php", array("password" => $password, "cookie" => $token));
-	wp_cache_delete($user_id, 'users');
-}
-endif;
