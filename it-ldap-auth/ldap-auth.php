@@ -56,21 +56,23 @@ $it_auth = new IT_Auth();
 global $it_auth;
 
 
-if (!function_exists("wp_validate_auth_cookie")) {
-	function wp_validate_auth_cookie() {
+if (!function_exists("wp_validate_auth_cookie")) :
 
-		$url = BASE . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
+function wp_validate_auth_cookie() {
 
-		$user_json = file_get_contents($url);
-		$user_data = json_decode($user_json, true);
+	$url = BASE . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
 
-		$user = get_user_by('login', $user_data["cid"]);
+	$user_json = file_get_contents($url);
+	$user_data = json_decode($user_json, true);
 
-		if ( ! $user ) {
-			do_action('auth_cookie_bad_username', $cookie_elements);
-			return false;
-		}
+	$user = get_user_by('login', $user_data["cid"]);
 
-		return $user->ID;
+	if ( ! $user ) {
+		do_action('auth_cookie_bad_username', $cookie_elements);
+		return false;
 	}
+
+	return $user->ID;
 }
+
+endif;
