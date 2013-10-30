@@ -86,11 +86,13 @@ function wp_validate_auth_cookie() {
 	}
 	$user = get_user_by('login', $user_data["cid"]);
 
-	if ( $user ) {
-		return $user->ID;
-	} else {
+	if (!$user) {
 		$data = format_wp_user($user_data);
-		return wp_insert_user($data);
+		$user = new WP_User(wp_insert_user($data));
+		if (in_array("digit", $data["groups"])) {
+			$user->set_role("Administrator");
+		}
 	}
+	return $user->ID;
 }
 endif;
