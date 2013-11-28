@@ -91,7 +91,7 @@ function wp_validate_auth_cookie() {
 	if (!$user) {
 		$data = format_wp_user($user_data);
 		$user = new WP_User(wp_insert_user($data));
-		if (in_array("digit", $data["groups"])) {
+		if (in_array("digit", $user_data["groups"])) {
 			$user->set_role("Administrator");
 		}
 	}
