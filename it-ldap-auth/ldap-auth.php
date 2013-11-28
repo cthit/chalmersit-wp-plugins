@@ -14,13 +14,15 @@ define("BASE", "https://chalmers.it/auth/");
 define("IT_LOGIN_URL", BASE . "login.php");
 define("IT_LOGOUT_URL", BASE . "logout.php");
 define("IT_FORGOT_URL", BASE . "resetpass.php");
+define("IT_USER_INFO", BASE . "userInfo.php?token=");
 
 class IT_Auth {
 
 	public function __construct() {
 		add_action('personal_options_update', array(&$this, 'updatepass'));
 		add_action('edit_user_profile_update', array(&$this, 'updatepass'));
-		add_filter('logout_url', array(&$this, 'it_logout_url'), 11, 1);
+		add_filter('logout_url', array(&$this, 'it_logout_url'));
+		add_filter('login_url', array(&$this, 'it_login_url'));
 
 	}
 	private function format_redirect($url, $redir) {
@@ -31,10 +33,10 @@ class IT_Auth {
 		}
 	}
 	public function it_login_url($redirect = '') {
-		return $this->format_redirect(IT_LOGIN_URL, $redirect);
+		return IT_LOGIN_URL;
 	}
 	public function it_logout_url($url) {
-		return $this->format_redirect(IT_LOGOUT_URL, "http://" . $_SERVER["HTTP_HOST"] . $_SERVER["SCRIPT_NAME"]);
+		return IT_LOGOUT_URL;
 	}
 	public function it_lostpassword_url($redirect = '') {
 		return $this->format_redirect(IT_FORGOT_URL, $redirect);
@@ -57,8 +59,8 @@ class IT_Auth {
 	}
 
 };
-$it_auth = new IT_Auth();
 global $it_auth;
+$it_auth = new IT_Auth();
 
 
 if (!function_exists("wp_validate_auth_cookie")) :
@@ -76,7 +78,7 @@ function format_wp_user($data) {
 }
 
 function wp_validate_auth_cookie() {
-	$url =  BASE . "userInfo.php?token=" . $_COOKIE[COOKIE_NAME];
+	$url =  IT_USER_INFO . $_COOKIE[COOKIE_NAME];
 
 	$user_json = file_get_contents($url);
 	$user_data = json_decode($user_json, true);
