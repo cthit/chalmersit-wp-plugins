@@ -90,7 +90,12 @@ function wp_validate_auth_cookie() {
 
 	if (!$user) {
 		$data = format_wp_user($user_data);
-		$user = new WP_User(wp_insert_user($data));
+		$result = wp_insert_user($data);
+		if ($result instanceof WP_Error) {
+			var_dump($result);
+			die();
+		}
+		$user = new WP_User($result);
 		if (in_array("digit", $user_data["groups"])) {
 			$user->set_role("Administrator");
 		}
