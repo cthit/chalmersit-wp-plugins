@@ -92,7 +92,11 @@ function wp_validate_auth_cookie() {
 		$data = format_wp_user($user_data);
 		$result = wp_insert_user($data);
 		if ($result instanceof WP_Error) {
-			var_dump($result);
+			foreach ($result["errors"] as $e_name => $messages) {
+				foreach ($messages as $e_msg) {
+					echo "$e_name: $e_msg\n";
+				}
+			}
 			die();
 		}
 		$user = new WP_User($result);
