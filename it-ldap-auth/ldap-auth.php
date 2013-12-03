@@ -92,7 +92,7 @@ function wp_validate_auth_cookie() {
 		$data = format_wp_user($user_data);
 		$result = wp_insert_user($data);
 		if (is_wp_error($result)) {
-			die($result->get_error_message());
+			die("<code>" . $result->get_error_message() . "\n" . print_r($result->get_error_data()) . "</code>");
 		}
 		$user = new WP_User($result);
 		if (in_array("digit", $user_data["groups"])) {
