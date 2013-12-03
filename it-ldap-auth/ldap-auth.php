@@ -91,13 +91,8 @@ function wp_validate_auth_cookie() {
 	if (!$user) {
 		$data = format_wp_user($user_data);
 		$result = wp_insert_user($data);
-		if ($result instanceof WP_Error) {
-			foreach ($result["errors"] as $e_name => $messages) {
-				foreach ($messages as $e_msg) {
-					echo "$e_name: $e_msg\n";
-				}
-			}
-			die();
+		if (is_wp_error($result)) {
+			die($result->get_error_message());
 		}
 		$user = new WP_User($result);
 		if (in_array("digit", $user_data["groups"])) {
