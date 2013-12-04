@@ -9,6 +9,16 @@
 	License: MIT
 */
 
+
+$ldap_sites = array(
+	"chalmers.it",
+	"beta.chalmers.it"
+);
+
+$ldap_enabled = (in_array($_SERVER['HTTP_HOST'], $ldap_sites));
+
+define("IT_LDAP_ENABLED", $ldap_enabled);
+
 define("COOKIE_NAME", "chalmersItAuth");
 define("BASE", "https://chalmers.it/auth/");
 define("IT_LOGIN_URL", BASE . "login.php");
@@ -78,6 +88,9 @@ function format_wp_user($data) {
 }
 
 function wp_validate_auth_cookie() {
+	if (!IT_LDAP_ENABLED) {
+		return 1; // Testing locally, automatically login as user with id=1
+	}
 	$url =  IT_USER_INFO . $_COOKIE[COOKIE_NAME];
 
 	$user_json = file_get_contents($url);
