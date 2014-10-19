@@ -11,8 +11,7 @@
 
 
 $ldap_sites = array(
-	"chalmers.it",
-	"beta.chalmers.it"
+	"localhost",
 );
 
 $ldap_enabled = (in_array($_SERVER['HTTP_HOST'], $ldap_sites));
@@ -20,8 +19,8 @@ $ldap_enabled = (in_array($_SERVER['HTTP_HOST'], $ldap_sites));
 define("IT_LDAP_ENABLED", $ldap_enabled);
 
 define("COOKIE_NAME", "chalmersItAuth");
-define("BASE", "https://chalmers.it/auth/");
-define("IT_LOGIN_URL", BASE . "login.php");
+define("BASE", "https://account.chalmers.it/");
+define("IT_LOGIN_URL", BASE );
 define("IT_LOGOUT_URL", BASE . "logout.php");
 define("IT_FORGOT_URL", BASE . "resetpass.php");
 define("IT_USER_INFO", BASE . "userInfo.php?token=");
@@ -31,8 +30,8 @@ class IT_Auth {
 	public function __construct() {
 		add_action('personal_options_update', array(&$this, 'updatepass'));
 		add_action('edit_user_profile_update', array(&$this, 'updatepass'));
-		add_filter('logout_url', array(&$this, 'it_logout_url'));
-		add_filter('login_url', array(&$this, 'it_login_url'));
+		add_filter('logout_url', array(&$this, 'it_logout_url'), 10, 2);
+		add_filter('login_url', array(&$this, 'it_login_url'), 10, 2);
 
 	}
 	private function format_redirect($url, $redir) {
@@ -42,10 +41,10 @@ class IT_Auth {
 			return $url . "?redirect_to=" . urlencode($redir);
 		}
 	}
-	public function it_login_url($redirect = '') {
-		return IT_LOGIN_URL;
+	public function it_login_url($login_url, $redirect = '') {
+		return $this->format_redirect(IT_LOGIN_URL, $redirect);
 	}
-	public function it_logout_url($url) {
+	public function it_logout_url($url, $redirect = '') {
 		return IT_LOGOUT_URL;
 	}
 	public function it_lostpassword_url($redirect = '') {
@@ -88,15 +87,16 @@ function format_wp_user($data) {
 }
 
 function wp_validate_auth_cookie() {
-	if (!IT_LDAP_ENABLED) {
-		return 1; // Testing locally, automatically login as user with id=1
+	#return 1;
+	if (!isset($_COOKIE[COOKIE_NAME]) || $_COOKIE[COOKIE_NAME] == "") {
+		return false;
 	}
 	$url =  IT_USER_INFO . $_COOKIE[COOKIE_NAME];
 
 	$user_json = file_get_contents($url);
 	$user_data = json_decode($user_json, true);
 
-	if ($user_data === null) {
+	if (isset($user_data['error'])) {
 		return false;
 	}
 	$user = get_user_by('login', $user_data["cid"]);
