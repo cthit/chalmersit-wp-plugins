@@ -12,7 +12,7 @@ function get_emails_for_categories($cats){
 	$catString = "";
 	$i = 0;
 	foreach ($cats as $id) {
-		if($i >= 0){
+		if($i > 0){
 			$catString.= " OR ";
 		}
 		$catString .= "cat_id = ".$id;
