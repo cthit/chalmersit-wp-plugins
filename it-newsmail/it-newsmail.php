@@ -18,7 +18,8 @@ register_deactivation_hook(__FILE__,'it_newsmail_deactivate');
 add_filter('cron_schedules', 'cronfilter_fifteen_min');
 add_action('itnm_cronhook', 'itnm_cron');
 add_action("init", "itnm_register_subscription");
-add_action("publish_post", "itnm_queuePost");
+add_action("draft_to_publish", "itnm_queuePost");
+add_action("future_to_publish", "itnm_queuePost");
 add_action("wp_enqueue_scripts", "itnm_scripts");
 
 
