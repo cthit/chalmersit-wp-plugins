@@ -111,8 +111,9 @@ function it_newsmail_deactivate(){
 	dbDelta($sql);
 }
 
-function itnm_queuePost($post_id) {
+function itnm_queuePost($post) {
 	global $wpdb;
+	$post_id = $post->ID;
 	$minutes = intval(current_time('timestamp')/60)+DELAY_TIME;
 
 	// Smart insert which updates if the post already exists
